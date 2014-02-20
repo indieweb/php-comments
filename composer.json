@@ -1,0 +1,20 @@
+{
+  "name": "p3k/comments",
+  "type": "library",
+  "keywords": ["indieweb", "p3k"],
+  "license": "Apache-2.0",
+  "authors" : [
+    {
+      "name": "Aaron Parecki",
+      "homepage": "http://aaronparecki.com"
+    }
+  ],
+  "require": {
+    "tantek/cassis": "0.1.*"
+  },
+  "autoload": {
+    "files": [
+      "src/p3k/comments.php"
+    ]    
+  }
+}
