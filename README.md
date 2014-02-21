@@ -3,6 +3,24 @@ Comments Presentation
 
 Given an [h-entry](http://indiewebcamp.com/h-entry), returns author info as well as truncated post text suitable for display.
 
+Installation
+------------
+
+Install via composer:
+
+```json
+{
+  "indieweb/comments": "0.1.*",
+}
+```
+
+Or just require the one file:
+
+```php
+require_once('src/indieweb/comments.php');
+```
+
+
 Usage
 -----
 
