@@ -1,5 +1,5 @@
 <?php
-namespace p3k\comments;
+namespace IndieWeb\comments;
 
 function truncate($text, $length) {
   ob_start();

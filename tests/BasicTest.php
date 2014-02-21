@@ -5,7 +5,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
   }
 
   private function _testEquals($expected, $input) {
-    $result = p3k\comments\parse($input, 90);
+    $result = IndieWeb\comments\parse($input, 90);
     $this->assertEquals($expected, $result);
   }
 
@@ -60,7 +60,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testContentTooLongSummaryIsOk() {
-    $result = p3k\comments\parse($this->buildHEntry(array(
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'post name', 
       'summary' => 'post summary', 
       'content' => '<p>this is some content but it is longer than 90 characters so the summary will be used instead</p>'
@@ -69,7 +69,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testContentTooLongSummaryTooLong() {
-    $result = p3k\comments\parse($this->buildHEntry(array(
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'post name', 
       'summary' => 'in this case the post summary is also too long, so a truncated version should be displayed instead', 
       'content' => '<p>this is some content but it is longer than 90 characters so the summary will be used instead</p>'
@@ -78,7 +78,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testContentTooLongNoSummary() {
-    $result = p3k\comments\parse($this->buildHEntry(array(
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'post name', 
       'content' => '<p>this is some content but it is longer than 90 characters so it will be truncated because there is no summary</p>'
     )), 90);
@@ -86,21 +86,21 @@ class BasicTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testNoContentNoSummaryNameOk() {
-    $result = p3k\comments\parse($this->buildHEntry(array(
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'post name'
     )), 90);
     $this->assertEquals('post name', $result['text']);
   }
 
   public function testNoContentNoSummaryNameTooLong() {
-    $result = p3k\comments\parse($this->buildHEntry(array(
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'this is a really long post name'
     )), 20);
     $this->assertEquals('this is a really ...', $result['text']);
   }
 
   public function testNameIsSubstringOfContent() {
-    $result = p3k\comments\parse($this->buildHEntry(array(
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'The name of the note ...',
       'content' => 'The name of the note is a substring of the content'
     )), 200);
@@ -108,7 +108,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testNamedArticleWithShortContent() {
-    $result = p3k\comments\parse($this->buildHEntry(array(
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'Post Name',
       'content' => 'The name of the post is different from the content'
     )), 200);
@@ -116,7 +116,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testNamedArticleWithLongContent() {
-    $result = p3k\comments\parse($this->buildHEntry(array(
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'Post Name',
       'content' => 'The name of the post is different from the content, but in this case the content is too long and should be truncated.'
     )), 40);
@@ -124,7 +124,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testAuthorIsURL() {
-    $result = p3k\comments\parse($this->buildHEntry(array(
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'post name', 
       'summary' => 'post summary', 
       'content' => '<p>this is some content</p>'
@@ -136,7 +136,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
   }
 
   public function testAuthorIsHCard() {
-    $result = p3k\comments\parse($this->buildHEntry(array(
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'post name', 
       'summary' => 'post summary', 
       'content' => '<p>this is some content</p>'

@@ -1,7 +1,7 @@
 {
-  "name": "p3k/comments",
+  "name": "IndieWeb/comments",
   "type": "library",
-  "keywords": ["indieweb", "p3k"],
+  "keywords": ["indieweb", "comments"],
   "license": "Apache-2.0",
   "authors" : [
     {
@@ -14,7 +14,7 @@
   },
   "autoload": {
     "files": [
-      "src/p3k/comments.php"
+      "src/indieweb/comments.php"
     ]    
   }
 }
