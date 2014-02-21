@@ -1,5 +1,5 @@
 {
-  "name": "IndieWeb/comments",
+  "name": "indieweb/comments",
   "type": "library",
   "keywords": ["indieweb", "comments"],
   "license": "Apache-2.0",
