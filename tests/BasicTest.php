@@ -99,6 +99,30 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('this is a really ...', $result['text']);
   }
 
+  public function testNameIsSubstringOfContent() {
+    $result = p3k\comments\parse($this->buildHEntry(array(
+      'name' => 'The name of the note ...',
+      'content' => 'The name of the note is a substring of the content'
+    )), 200);
+    $this->assertEquals('The name of the note is a substring of the content', $result['text']);
+  }
+
+  public function testNamedArticleWithShortContent() {
+    $result = p3k\comments\parse($this->buildHEntry(array(
+      'name' => 'Post Name',
+      'content' => 'The name of the post is different from the content'
+    )), 200);
+    $this->assertEquals('The name of the post is different from the content', $result['text']);
+  }
+
+  public function testNamedArticleWithLongContent() {
+    $result = p3k\comments\parse($this->buildHEntry(array(
+      'name' => 'Post Name',
+      'content' => 'The name of the post is different from the content, but in this case the content is too long and should be truncated.'
+    )), 40);
+    $this->assertEquals('The name of the post is different ...', $result['text']);
+  }
+
   public function testAuthorIsURL() {
     $result = p3k\comments\parse($this->buildHEntry(array(
       'name' => 'post name', 
