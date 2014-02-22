@@ -8,9 +8,11 @@ function truncate($text, $length) {
   return $short;
 }
 
-function parse($mf, $maxTextLength=150) {
-  # print_r($mf);
+function parse($mf, $maxTextLength=150, $refURL=false) {
+  // When parsing a comment, the $refURL is the URL being commented on.
+  // This is used to check for an explicit in-reply-to property set to this URL.
 
+  $type = 'mention';
   $published = false;
   $text = false;
   $url = false;
@@ -19,6 +21,7 @@ function parse($mf, $maxTextLength=150) {
     'photo' => false,
     'url' => false
   );
+  $rsvp = null;
 
   if(array_key_exists('type', $mf) && in_array('h-entry', $mf['type']) && array_key_exists('properties', $mf)) {
     $properties = $mf['properties'];
@@ -52,9 +55,33 @@ function parse($mf, $maxTextLength=150) {
       $url = $properties['url'][0];
     }
 
-    // From http://indiewebcamp.com/comments-presentation#How_to_display
+    // If the post has an explicit in-reply-to property, verify it matches $refURL and set the type to "reply"
+    if($refURL && array_key_exists('in-reply-to', $properties) && in_array($refURL, $properties['in-reply-to'])) {
+      $type = 'reply';
+    }
 
-    #print_r($properties);
+    // Check if the reply is an RSVP
+    if(array_key_exists('rsvp', $properties)) {
+      $rsvp = $properties['rsvp'][0];
+      $type = 'rsvp';
+    }
+
+    // Check if this post is a "repost"
+    if($refURL && array_key_exists('repost-of', $properties) && in_array($refURL, $properties['repost-of'])) {
+      $type = 'repost';
+    }
+
+    // Also check for "u-repost" since some people are sending that. Probably "u-repost-of" will win out.
+    if($refURL && array_key_exists('repost', $properties) && in_array($refURL, $properties['repost'])) {
+      $type = 'repost';
+    }
+
+    // Check if this post is a "like"
+    if($refURL && array_key_exists('like', $properties) && in_array($refURL, $properties['like'])) {
+      $type = 'like';
+    }
+
+    // From http://indiewebcamp.com/comments-presentation#How_to_display
 
     // If the entry has an e-content, and if the content is not too long, use that
     if(array_key_exists('content', $properties)) {
@@ -100,11 +127,18 @@ function parse($mf, $maxTextLength=150) {
 
   }
 
-  return array(
+  $result = array(
     'author' => $author,
     'published' => $published,
     'text' => $text,
-    'url' => $url
+    'url' => $url,
+    'type' => $type
   );
+
+  if($rsvp !== null) {
+    $result['rsvp'] = $rsvp;
+  }
+
+  return $result;
 }
 

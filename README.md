@@ -37,6 +37,7 @@ Original HTML:
   <h3 class="p-name">Example Note</h3>
   <p class="e-content">this text is displayed as the comment</p>
   <time class="dt-published" datetime="2014-02-16T18:48:17-0800">Feb 16, 6:48pm</time>
+  <a href="http://caseorganic.com/post/1" class="u-in-reply-to">in reply to caseorganic.com</a>
 </div>
 ```
 
@@ -72,6 +73,9 @@ Parsed Microformats:
         "published": [
             "2014-02-16T18:48:17-0800"
         ],
+        "in-reply-to": [
+            "http:\/\/caseorganic.com\/post\/1"
+        ],
         "content": [
             {
                 "html": "this text is displayed as the comment",
@@ -92,6 +96,7 @@ Resulting PHP array:
 
 ```php
   $result = array(
+    'type' => 'reply',
     'author' => array(
       'name' => 'Aaron Parecki',
       'photo' => 'http://aaronparecki.com/images/aaronpk.png',
@@ -111,6 +116,21 @@ The `text` property will always be within your maximum desired length as passed 
 The function follows the algorithm described at [comments-presentation](http://indiewebcamp.com/comments-presentation#How_to_display)
 for deciding whether to show the `p-name`, `p-summary` or `e-content` properties and truncating appropriately.
 
+
+Post Types
+----------
+
+The parser also attempts to determine what type of post this is relative to the primary URL.
+
+A key named `type` will always be returned with one of the following values:
+
+* mention - default
+* reply - when the post contains explicit `in-reply-to` markup
+* rsvp - if the post contains an RSVP yes/no/maybe value
+* like
+* repost
+
+When the type is "rsvp", there will also be an `rsvp` key set to the value of the RSVP, usually "yes", "no" or "maybe".
 
 
 Tests
