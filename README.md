@@ -89,7 +89,7 @@ Parsed Microformats:
 Parse for comment display:
 
 ```php
-$result = IndieWeb\comments\parse($input, $maxLength);
+$result = IndieWeb\comments\parse($input, $refURL, $maxLength, $maxLines);
 ```
 
 Resulting PHP array:

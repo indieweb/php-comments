@@ -8,7 +8,7 @@ function truncate($text, $length) {
   return $short;
 }
 
-function parse($mf, $maxTextLength=150, $refURL=false) {
+function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
   // When parsing a comment, the $refURL is the URL being commented on.
   // This is used to check for an explicit in-reply-to property set to this URL.
 
@@ -87,7 +87,8 @@ function parse($mf, $maxTextLength=150, $refURL=false) {
     // If the entry has an e-content, and if the content is not too long, use that
     if(array_key_exists('content', $properties)) {
       $content = $properties['content'][0]['value'];
-      if(strlen($content) <= $maxTextLength) {
+      $visibleLines = array_filter(explode("\n", $content));
+      if(strlen($content) <= $maxTextLength && count($visibleLines) <= $maxLines) {
         $text = $content;
       }
     }
@@ -107,7 +108,28 @@ function parse($mf, $maxTextLength=150, $refURL=false) {
         // if no p-summary, but there is an e-content, use a truncated e-content
         if(array_key_exists('content', $properties)) {
           $content = $properties['content'][0]['value'];
-          $text = truncate($content, $maxTextLength);
+
+          $lines = explode("\n", $content);
+          $visibleLines = array_filter($lines);
+          if(count($visibleLines) > $maxLines) {
+            $newContent = array();
+            $visibleLinesAdded = 0;
+            $i = 0;
+            while($visibleLinesAdded < $maxLines && $i < count($lines)) {
+              $line = $lines[$i];
+              $newContent[] = $line;
+              if(trim($line) != '')
+                $visibleLinesAdded++;
+              $i++;
+            }
+            $content = implode("\n", $newContent);
+            // Tack on extra chars and then tell cassis to ellipsize it shorter to take advantage of proper ellipsizing logic.
+            // This is for when the full text is shorter than $maxTextLength but has more lines than $maxLines
+            $content .= ' ....';
+            $text = truncate($content, min($maxTextLength, strlen($content)-1));
+          } else {
+            $text = truncate($content, $maxTextLength);
+          }
         }
       }
     }

@@ -4,11 +4,6 @@ class BasicTest extends PHPUnit_Framework_TestCase {
   public function setUp() {
   }
 
-  private function _testEquals($expected, $input) {
-    $result = IndieWeb\comments\parse($input, 90);
-    $this->assertEquals($expected, $result);
-  }
-
   private $_refURL = 'http://caseorganic.com/post/1';
 
   private function buildHEntry($input, $author=false, $isReply=true) {
@@ -33,10 +28,14 @@ class BasicTest extends PHPUnit_Framework_TestCase {
       $entry['properties']['in-reply-to'] = array($this->_refURL);
     }
     if(array_key_exists('content', $input)) {
-      $entry['properties']['content'] = array(array(
-        'html' => $input['content'],
-        'value' => strip_tags($input['content'])
-      ));
+      if(is_string($input['content'])) {
+        $entry['properties']['content'] = array(array(
+          'html' => $input['content'],
+          'value' => strip_tags($input['content'])
+        ));
+      } else {
+        $entry['properties']['content'] = array($input['content']);
+      }
       unset($input['content']);
     }
     // The rest of the properties are all simple properties. Loop through and add them all as properties.
@@ -51,7 +50,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
       'name' => 'post name', 
       'summary' => 'post summary', 
       'content' => 'this is some content'
-    )), 90, $this->_refURL);
+    )), $this->_refURL, 90);
     $this->assertEquals(array(
       'type' => 'reply',
       'author' => array(
@@ -71,7 +70,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
       'name' => 'post name', 
       'summary' => 'post summary', 
       'content' => '<p>this is some content but it is longer than 90 characters so the summary will be used instead</p>'
-    )), 90, $this->_refURL);
+    )), $this->_refURL, 90);
     $this->assertEquals('reply', $result['type']);
     $this->assertEquals('post summary', $result['text']);
   }
@@ -81,7 +80,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
       'name' => 'post name', 
       'summary' => 'in this case the post summary is also too long, so a truncated version should be displayed instead', 
       'content' => '<p>this is some content but it is longer than 90 characters so the summary will be used instead</p>'
-    )), 90, $this->_refURL);
+    )), $this->_refURL, 90);
     $this->assertEquals('reply', $result['type']);
     $this->assertEquals('in this case the post summary is also too long, so a truncated version should be ...', $result['text']);
   }
@@ -90,7 +89,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'post name', 
       'content' => '<p>this is some content but it is longer than 90 characters so it will be truncated because there is no summary</p>'
-    )), 90, $this->_refURL);
+    )), $this->_refURL, 90);
     $this->assertEquals('reply', $result['type']);
     $this->assertEquals('this is some content but it is longer than 90 characters so it will be truncated ...', $result['text']);
   }
@@ -101,7 +100,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     // be used in the comment text, but only when it is a reply.
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'post name'
-    )), 90, $this->_refURL);
+    )), $this->_refURL, 90);
     $this->assertEquals('reply', $result['type']);
     $this->assertEquals('', $result['name']);
     $this->assertEquals('post name', $result['text']);
@@ -112,7 +111,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     // BUT, since this one is a mention, not a reply, it is returned in the "name" instead, with blank "text".
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'post name'
-    ), false, false), 90, $this->_refURL);
+    ), false, false), $this->_refURL, 90);
     $this->assertEquals('mention', $result['type']);
     $this->assertEquals('post name', $result['name']);
     $this->assertEquals('', $result['text']);
@@ -121,7 +120,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
   public function testNoContentNoSummaryNameTooLong() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'this is a really long post name'
-    )), 20, $this->_refURL);
+    )), $this->_refURL, 20);
     $this->assertEquals('reply', $result['type']);
     $this->assertEquals('this is a really ...', $result['text']);
   }
@@ -130,7 +129,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'The name of the note',
       'content' => 'The name of the note is a substring of the content'
-    )), 200, $this->_refURL);
+    )), $this->_refURL, 200);
     $this->assertEquals('reply', $result['type']);
     $this->assertEquals('', $result['name']);
     $this->assertEquals('The name of the note is a substring of the content', $result['text']);
@@ -140,7 +139,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'The name of the note ...',
       'content' => 'The name of the note is a substring of the content'
-    )), 200, $this->_refURL);
+    )), $this->_refURL, 200);
     $this->assertEquals('reply', $result['type']);
     $this->assertEquals('', $result['name']);
     $this->assertEquals('The name of the note is a substring of the content', $result['text']);
@@ -150,7 +149,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'Post Name',
       'content' => 'The name of the post is different from the content'
-    )), 200, $this->_refURL);
+    )), $this->_refURL, 200);
     $this->assertEquals('reply', $result['type']);
     $this->assertEquals('Post Name', $result['name']);
     $this->assertEquals('The name of the post is different from the content', $result['text']);
@@ -160,18 +159,94 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'Post Name',
       'content' => 'The name of the post is different from the content, but in this case the content is too long and should be truncated.'
-    )), 40, $this->_refURL);
+    )), $this->_refURL, 40);
     $this->assertEquals('reply', $result['type']);
     $this->assertEquals('Post Name', $result['name']);
     $this->assertEquals('The name of the post is different ...', $result['text']);
   }
+
+  public function testNameIsReturned() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'Post Name',
+      'content' => 'The name of the post is different from the content, but in this case the content is too long and should be truncated.'
+    ), false, false), $this->_refURL, 40);
+    $this->assertEquals('mention', $result['type']);
+    $this->assertEquals('Post Name', $result['name']);
+    $this->assertEquals('The name of the post is different ...', $result['text']);
+  }
+
+  public function testNoMicroformatsIsMention() {
+    $result = IndieWeb\comments\parse(array(), $this->_refURL, 200);
+    $this->assertEquals('mention', $result['type']);
+    $this->assertEquals('', $result['text']);
+  }
+
+  /***************************************************************************
+   * Multi-line comments
+   */
+
+  public function testMultiLineCommentFitsWithinLimits() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'content' => array(
+        'value' => 'Line one
+Line two
+Line three'
+      )
+    ), false, false), $this->_refURL, 400, 3);
+    $this->assertEquals('', $result['name']);
+    $this->assertEquals('Line one
+Line two
+Line three', $result['text']);
+  }
+
+  public function testTrimMultiLineCommentHalfWayThroughThirdLine() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'content' => array(
+        'html' => '#HouseOfCards s2e1 was good. 
+But the best thing yesterday was getting to try a Boosted electric skateboard: <a class="auto-link" href="http://boostedboards.com/">http://boostedboards.com/</a>
+
+Amazing. Handheld trigger remote control via Bluetooth. Forward and reverse. And I only tried it in &quot;turtle&quot; mode. In &quot;rabbit&quot; mode it can apparently do 20 miles an hour. Up hill. Jetsons-like motor sound included.
+
+Forget about Segway, Boosted&#039;s electric skateboard feels like an object from the future dropped into the present, more in the realm of Marty&#039;s hoverboard (Back To The Future II &amp; III) and Y.T.&#039;s Smartwheels skateboard (Snow Crash).',
+        'value' => "#HouseOfCards s2e1 was good. 
+But the best thing yesterday was getting to try a Boosted electric skateboard: http://boostedboards.com/
+
+Amazing. Handheld trigger remote control via Bluetooth. Forward and reverse. And I only tried it in \"turtle\" mode. In \"rabbit\" mode it can apparently do 20 miles an hour. Up hill. Jetsons-like motor sound included.
+
+Forget about Segway, Boosted&#039;s electric skateboard feels like an object from the future dropped into the present, more in the realm of Marty's hoverboard (Back To The Future II &amp; III) and Y.T.'s Smartwheels skateboard (Snow Crash)."
+      )
+    ), false, false), $this->_refURL, 197, 3);
+    $this->assertEquals('mention', $result['type']);
+    $this->assertEquals('', $result['name']);
+    $this->assertEquals("#HouseOfCards s2e1 was good. 
+But the best thing yesterday was getting to try a Boosted electric skateboard: http://boostedboards.com/
+
+Amazing. Handheld trigger remote control via Bluetooth. ...", $result['text']);
+  }
+
+  public function testTrimShortTextMultiLineComment() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'Post Name',
+      'content' => array(
+        'html' => '',
+        'value' => "This comment spans multiple lines.\nOnly the first two lines should be returned.\nThe rest should be truncated."
+      )
+    ), false, false), $this->_refURL, 400, 2);
+    $this->assertEquals('mention', $result['type']);
+    $this->assertEquals('Post Name', $result['name']);
+    $this->assertEquals("This comment spans multiple lines.\nOnly the first two lines should be returned. ...", $result['text']);
+  }
+
+  /***************************************************************************
+   * Other post types
+   */
 
   public function testReplyIsRSVP() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'RSVP Yes',
       'content' => 'Going to tonight\'s #IndieWeb Dinner @21stAmendment, 18:00. Hope to see you there!',
       'rsvp' => 'yes'
-    )), 200, $this->_refURL);
+    )), $this->_refURL, 200);
     $this->assertEquals('rsvp', $result['type']);
     $this->assertEquals('Going to tonight\'s #IndieWeb Dinner @21stAmendment, 18:00. Hope to see you there!', $result['text']);
     $this->assertEquals('yes', $result['rsvp']);
@@ -182,7 +257,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
       'name' => 'Liked this',
       'content' => 'liked this post',
       'like' => $this->_refURL
-    )), 200, $this->_refURL);
+    )), $this->_refURL, 200);
     $this->assertEquals('like', $result['type']);
     $this->assertEquals('liked this post', $result['text']);
   }
@@ -192,7 +267,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
       'name' => 'Reposted this',
       'content' => 'Reposted this',
       'repost-of' => $this->_refURL
-    )), 200, $this->_refURL);
+    )), $this->_refURL, 200);
     $this->assertEquals('repost', $result['type']);
     $this->assertEquals('Reposted this', $result['text']);
   }
@@ -202,7 +277,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
       'name' => 'Reposted this',
       'content' => 'Reposted this',
       'repost' => $this->_refURL
-    )), 200, $this->_refURL);
+    )), $this->_refURL, 200);
     $this->assertEquals('repost', $result['type']);
     $this->assertEquals('Reposted this', $result['text']);
   }
@@ -211,33 +286,21 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'Post Name',
       'content' => 'The name of the post is different from the content, but in this case the content is too long and should be truncated.'
-    ), false, false), 40, $this->_refURL);
+    ), false, false), $this->_refURL, 40);
     $this->assertEquals('mention', $result['type']);
     $this->assertEquals('The name of the post is different ...', $result['text']);
   }
 
-  public function testNameIsReturned() {
-    $result = IndieWeb\comments\parse($this->buildHEntry(array(
-      'name' => 'Post Name',
-      'content' => 'The name of the post is different from the content, but in this case the content is too long and should be truncated.'
-    ), false, false), 40, $this->_refURL);
-    $this->assertEquals('mention', $result['type']);
-    $this->assertEquals('Post Name', $result['name']);
-    $this->assertEquals('The name of the post is different ...', $result['text']);
-  }
-
-  public function testNoMicroformatsIsMention() {
-    $result = IndieWeb\comments\parse(array(), 200, $this->_refURL);
-    $this->assertEquals('mention', $result['type']);
-    $this->assertEquals('', $result['text']);
-  }
+  /***************************************************************************
+   * Author tests
+   */
 
   public function testAuthorIsURL() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'post name', 
       'summary' => 'post summary', 
       'content' => '<p>this is some content</p>'
-    ), 'http://aaronparecki.com/'), 200, $this->_refURL);
+    ), 'http://aaronparecki.com/'), $this->_refURL, 200);
     $author = $result['author'];
     $this->assertEquals('reply', $result['type']);
     $this->assertEquals(false, $author['name']);
@@ -250,7 +313,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
       'name' => 'post name', 
       'summary' => 'post summary', 
       'content' => '<p>this is some content</p>'
-    )), 200, $this->_refURL);
+    )), $this->_refURL, 200);
     $author = $result['author'];
     $this->assertEquals('reply', $result['type']);
     $this->assertEquals('Aaron Parecki', $author['name']);
@@ -270,7 +333,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
           'url' => array('http://aaronparecki.com')
         )
       )
-    ), 200 , $this->_refURL);
+    ), $this->_refURL, 200);
     $this->assertEquals('reply', $result['type']);
     $this->assertEquals('Aaron Parecki', $result['author']['name']);
     $this->assertEquals('', $result['author']['photo']);
