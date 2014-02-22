@@ -60,6 +60,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
         'url' => 'http://aaronparecki.com/'
       ),
       'published' => '2014-02-16T18:48:17-0800',
+      'name' => 'post name',
       'text' => 'this is some content',
       'url' => 'http://aaronparecki.com/post/1'
     ), $result);
@@ -94,12 +95,27 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('this is some content but it is longer than 90 characters so it will be truncated ...', $result['text']);
   }
 
-  public function testNoContentNoSummaryNameOk() {
+  public function testReplyNoContentNoSummaryNameOk() {
+    // This one's tricky. If there is no content, the comments-presentation algorithm says to use the name.
+    // So the parser won't return a value for the "name" property since the value would already
+    // be used in the comment text, but only when it is a reply.
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'post name'
     )), 90, $this->_refURL);
     $this->assertEquals('reply', $result['type']);
+    $this->assertEquals('', $result['name']);
     $this->assertEquals('post name', $result['text']);
+  }
+
+  public function testMentionNoContentNoSummaryNameOk() {
+    // This one's tricky. If there is no content, the comments-presentation algorithm says to use the name.
+    // BUT, since this one is a mention, not a reply, it is returned in the "name" instead, with blank "text".
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'post name'
+    ), false, false), 90, $this->_refURL);
+    $this->assertEquals('mention', $result['type']);
+    $this->assertEquals('post name', $result['name']);
+    $this->assertEquals('', $result['text']);
   }
 
   public function testNoContentNoSummaryNameTooLong() {
@@ -112,10 +128,21 @@ class BasicTest extends PHPUnit_Framework_TestCase {
 
   public function testNameIsSubstringOfContent() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'The name of the note',
+      'content' => 'The name of the note is a substring of the content'
+    )), 200, $this->_refURL);
+    $this->assertEquals('reply', $result['type']);
+    $this->assertEquals('', $result['name']);
+    $this->assertEquals('The name of the note is a substring of the content', $result['text']);
+  }
+
+  public function testNameIsEllipsizedAndSubstringOfContent() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'The name of the note ...',
       'content' => 'The name of the note is a substring of the content'
     )), 200, $this->_refURL);
     $this->assertEquals('reply', $result['type']);
+    $this->assertEquals('', $result['name']);
     $this->assertEquals('The name of the note is a substring of the content', $result['text']);
   }
 
@@ -125,6 +152,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
       'content' => 'The name of the post is different from the content'
     )), 200, $this->_refURL);
     $this->assertEquals('reply', $result['type']);
+    $this->assertEquals('Post Name', $result['name']);
     $this->assertEquals('The name of the post is different from the content', $result['text']);
   }
 
@@ -134,6 +162,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
       'content' => 'The name of the post is different from the content, but in this case the content is too long and should be truncated.'
     )), 40, $this->_refURL);
     $this->assertEquals('reply', $result['type']);
+    $this->assertEquals('Post Name', $result['name']);
     $this->assertEquals('The name of the post is different ...', $result['text']);
   }
 
@@ -184,6 +213,16 @@ class BasicTest extends PHPUnit_Framework_TestCase {
       'content' => 'The name of the post is different from the content, but in this case the content is too long and should be truncated.'
     ), false, false), 40, $this->_refURL);
     $this->assertEquals('mention', $result['type']);
+    $this->assertEquals('The name of the post is different ...', $result['text']);
+  }
+
+  public function testNameIsReturned() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'Post Name',
+      'content' => 'The name of the post is different from the content, but in this case the content is too long and should be truncated.'
+    ), false, false), 40, $this->_refURL);
+    $this->assertEquals('mention', $result['type']);
+    $this->assertEquals('Post Name', $result['name']);
     $this->assertEquals('The name of the post is different ...', $result['text']);
   }
 

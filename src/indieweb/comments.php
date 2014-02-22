@@ -14,6 +14,7 @@ function parse($mf, $maxTextLength=150, $refURL=false) {
 
   $type = 'mention';
   $published = false;
+  $name = false;
   $text = false;
   $url = false;
   $author = array(
@@ -115,12 +116,34 @@ function parse($mf, $maxTextLength=150, $refURL=false) {
     if($text == false) {
       // If there is a p-name, and it's not too long, use that
       if(array_key_exists('name', $properties)) {
-        $name = $properties['name'][0];
-        if(strlen($name) <= $maxTextLength) {
-          $text = $name;
+        $pname = $properties['name'][0];
+        if(strlen($pname) <= $maxTextLength) {
+          $text = $pname;
         } else {
           // if the p-name is too long, truncate it
-          $text = truncate($name, $maxTextLength);
+          $text = truncate($pname, $maxTextLength);
+        }
+      }
+    }
+
+    // Now see if the "name" property of the h-entry is unique or part of the content
+    if(array_key_exists('name', $properties)) {
+      $nameSanitized = strtolower(strip_tags($properties['name'][0]));
+      $nameSanitized = preg_replace('/ ?\.+$/', '', $nameSanitized); // Remove trailing ellipses
+      $contentSanitized = strtolower(strip_tags($text));
+
+      // If this is a "mention" instead of a "reply", and if there is no "content" property,
+      // then we actually want to use the "name" property as the name and leave "text" blank.
+      if($type == 'mention' && !array_key_exists('content', $properties)) {
+        $name = $properties['name'][0];
+        $text = false;
+      } else {
+        if($nameSanitized != $contentSanitized) {
+          // If the name is the beginning of the content, we don't care
+          if(!(strpos($contentSanitized, $nameSanitized) === 0)) {
+            // The name was determined to be different from the content, so return it
+            $name = $properties['name'][0];
+          }
         }
       }
     }
@@ -130,6 +153,7 @@ function parse($mf, $maxTextLength=150, $refURL=false) {
   $result = array(
     'author' => $author,
     'published' => $published,
+    'name' => $name,
     'text' => $text,
     'url' => $url,
     'type' => $type

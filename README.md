@@ -103,6 +103,7 @@ Resulting PHP array:
       'url' => 'http://aaronparecki.com/'
     ),
     'published' => '2014-02-16T18:48:17-0800',
+    'name' => 'Example Note',
     'text' => 'this text is displayed as the comment',
     'url' => 'http://aaronparecki.com/post/1'
   )
@@ -131,6 +132,30 @@ A key named `type` will always be returned with one of the following values:
 * repost
 
 When the type is "rsvp", there will also be an `rsvp` key set to the value of the RSVP, usually "yes", "no" or "maybe".
+
+
+Post Names
+----------
+
+If the post has a "name" property that is not the same as the content, then it will also
+be included in the parsed result. This is so that the calling code can choose to display
+the post name linked to the full post rather than the content.
+
+
+```php
+  $result = array(
+    'type' => 'mention',
+    'author' => array(
+      'name' => 'Aaron Parecki',
+      'photo' => 'http://aaronparecki.com/images/aaronpk.png',
+      'url' => 'http://aaronparecki.com/'
+    ),
+    'published' => '2014-02-16T18:48:17-0800',
+    'name' => 'Post Name',
+    'text' => 'this is the text of the article',
+    'url' => 'http://aaronparecki.com/post/1'
+  )
+```
 
 
 Tests
