@@ -1,11 +1,36 @@
 <?php
 namespace IndieWeb\comments;
 
-function truncate($text, $length) {
+function truncateString($text, $length) {
   ob_start();
   $short = ellipsize_to_word($text, $length, '...', 10);
   ob_end_clean();
   return $short;
+}
+
+function truncate($text, $maxTextLength, $maxLines) {
+  $lines = explode("\n", $text);
+  $visibleLines = array_filter($lines);
+  if(count($visibleLines) > $maxLines) {
+    $newContent = array();
+    $visibleLinesAdded = 0;
+    $i = 0;
+    while($visibleLinesAdded < $maxLines && $i < count($lines)) {
+      $line = $lines[$i];
+      $newContent[] = $line;
+      if(trim($line) != '')
+        $visibleLinesAdded++;
+      $i++;
+    }
+    $text = implode("\n", $newContent);
+    // Tack on extra chars and then tell cassis to ellipsize it shorter to take advantage of proper ellipsizing logic.
+    // This is for when the full text is shorter than $maxTextLength but has more lines than $maxLines
+    $text .= ' ....';
+    $text = truncateString($text, min($maxTextLength, strlen($text)-1));
+  } else {
+    $text = truncateString($text, $maxTextLength);
+  }
+  return $text;
 }
 
 function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
@@ -116,34 +141,13 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
           $text = $summary;
         } else {
           // if the p-summary is too long, then truncate the p-summary
-          $text = truncate($summary, $maxTextLength);
+          $text = truncate($summary, $maxTextLength, $maxLines);
         }
       } else {
         // if no p-summary, but there is an e-content, use a truncated e-content
         if(array_key_exists('content', $properties)) {
           $content = $properties['content'][0]['value'];
-
-          $lines = explode("\n", $content);
-          $visibleLines = array_filter($lines);
-          if(count($visibleLines) > $maxLines) {
-            $newContent = array();
-            $visibleLinesAdded = 0;
-            $i = 0;
-            while($visibleLinesAdded < $maxLines && $i < count($lines)) {
-              $line = $lines[$i];
-              $newContent[] = $line;
-              if(trim($line) != '')
-                $visibleLinesAdded++;
-              $i++;
-            }
-            $content = implode("\n", $newContent);
-            // Tack on extra chars and then tell cassis to ellipsize it shorter to take advantage of proper ellipsizing logic.
-            // This is for when the full text is shorter than $maxTextLength but has more lines than $maxLines
-            $content .= ' ....';
-            $text = truncate($content, min($maxTextLength, strlen($content)-1));
-          } else {
-            $text = truncate($content, $maxTextLength);
-          }
+          $text = truncate($content, $maxTextLength, $maxLines);
         }
       }
     }
@@ -157,7 +161,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
           $text = $pname;
         } else {
           // if the p-name is too long, truncate it
-          $text = truncate($pname, $maxTextLength);
+          $text = truncate($pname, $maxTextLength, $maxLines);
         }
       }
     }
