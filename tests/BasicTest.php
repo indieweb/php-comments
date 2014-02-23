@@ -6,7 +6,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
 
   private $_refURL = 'http://caseorganic.com/post/1';
 
-  private function buildHEntry($input, $author=false, $isReply=true) {
+  private function buildHEntry($input, $author=false, $replyTo=true) {
     $entry = array(
       'type' => array('h-entry'),
       'properties' => array(
@@ -24,8 +24,11 @@ class BasicTest extends PHPUnit_Framework_TestCase {
         'url' => array('http://aaronparecki.com/post/1'),
       )
     );
-    if($isReply) {
+    if($replyTo === true) {
       $entry['properties']['in-reply-to'] = array($this->_refURL);
+    }
+    if(is_array($replyTo)) {
+      $entry['properties']['in-reply-to'] = array($replyTo);      
     }
     if(array_key_exists('content', $input)) {
       if(is_string($input['content'])) {
@@ -179,6 +182,19 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     $result = IndieWeb\comments\parse(array(), $this->_refURL, 200);
     $this->assertEquals('mention', $result['type']);
     $this->assertEquals('', $result['text']);
+  }
+
+  public function testHCiteIsReply() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'Post Name',
+    ), false, array(
+      'type' => array('h-cite'),
+      'properties' => array(
+        'url' => array($this->_refURL),
+      )
+    )), $this->_refURL, 40);
+    $this->assertEquals('reply', $result['type']);
+    $this->assertEquals('Post Name', $result['text']);
   }
 
   /***************************************************************************

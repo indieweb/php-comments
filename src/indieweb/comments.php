@@ -57,8 +57,22 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     }
 
     // If the post has an explicit in-reply-to property, verify it matches $refURL and set the type to "reply"
-    if($refURL && array_key_exists('in-reply-to', $properties) && in_array($refURL, $properties['in-reply-to'])) {
-      $type = 'reply';
+    if($refURL && array_key_exists('in-reply-to', $properties)) {
+      // in-reply-to may be a string or an h-cite
+      foreach($properties['in-reply-to'] as $check) {
+        if(is_string($check) && $check == $refURL) {
+          $type = 'reply';
+          continue;
+        } elseif(is_array($check)) {
+          if(array_key_exists('type', $check) && in_array('h-cite', $check['type'])) {
+            if(array_key_exists('properties', $check) && array_key_exists('url', $check['properties'])) {
+              if(in_array($refURL, $check['properties']['url'])) {
+                $type = 'reply';
+              }
+            }
+          }
+        }
+      }
     }
 
     // Check if the reply is an RSVP
