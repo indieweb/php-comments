@@ -1,7 +1,8 @@
 <?php
 class BasicTest extends PHPUnit_Framework_TestCase {
 
-  public function setUp() {
+  private function loadFile($fn) {
+    return json_decode(file_get_contents(dirname(__FILE__).'/data/'.$fn), true);
   }
 
   private $_refURL = 'http://caseorganic.com/post/1';
@@ -251,6 +252,14 @@ Amazing. Handheld trigger remote control via Bluetooth. ...", $result['text']);
     $this->assertEquals('mention', $result['type']);
     $this->assertEquals('Post Name', $result['name']);
     $this->assertEquals("This comment spans multiple lines.\nOnly the first two lines should be returned. ...", $result['text']);
+  }
+
+  public function testMultiLineCommentWithReallyLongName() {
+    $result = IndieWeb\comments\parse($this->loadFile('post-tantek-1.json'), 'http://aaronparecki.com/events/2013/09/30/1/indieweb-dinner-at-21st-amendment', 400, 2);
+    $this->assertEquals('mention', $result['type']);
+    $this->assertEquals('', $result['name']);
+    $this->assertEquals('Well done @aaronpk! Real-time #indieweb comments:
+http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $result['text']);
   }
 
   /***************************************************************************

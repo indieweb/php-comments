@@ -170,7 +170,9 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     if(array_key_exists('name', $properties)) {
       $nameSanitized = strtolower(strip_tags($properties['name'][0]));
       $nameSanitized = preg_replace('/ ?\.+$/', '', $nameSanitized); // Remove trailing ellipses
+      // Using the already truncated version of the content here. But the "name" would not have been truncated so may be longer than the content.
       $contentSanitized = strtolower(strip_tags($text));
+      $contentSanitized = preg_replace('/ ?\.+$/', '', $contentSanitized); // Remove trailing ellipses
 
       // If this is a "mention" instead of a "reply", and if there is no "content" property,
       // then we actually want to use the "name" property as the name and leave "text" blank.
@@ -180,9 +182,10 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
       } else {
         if($nameSanitized != $contentSanitized) {
           // If the name is the beginning of the content, we don't care
-          if(!(strpos($contentSanitized, $nameSanitized) === 0)) {
+          // Same if the content is the beginning of the name (like with really long notes)
+          if(!(strpos($contentSanitized, $nameSanitized) === 0) && !(strpos($nameSanitized, $contentSanitized) === 0)) {
             // The name was determined to be different from the content, so return it
-            $name = $properties['name'][0];
+            $name = $properties['name'][0]; //truncate($properties['name'][0], $maxTextLength, $maxLines);
           }
         }
       }
