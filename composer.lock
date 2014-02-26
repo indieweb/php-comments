@@ -3,30 +3,30 @@
         "This file locks the dependencies of your project to a known state",
         "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
     ],
-    "hash": "a0980a49c9a4bad656e673182671aa1b",
+    "hash": "31325b3b2b8208a00c3991ac539014a5",
     "packages": [
         {
             "name": "tantek/cassis",
-            "version": "v0.1.15895",
+            "version": "v0.1.16124",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tantek/cassis.git",
-                "reference": "c158d9ebec1a5066e8ebc96f97b00658930dbf1f"
+                "reference": "b9ec7142179950010c896ec3894aece0a56b0029"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tantek/cassis/zipball/c158d9ebec1a5066e8ebc96f97b00658930dbf1f",
-                "reference": "c158d9ebec1a5066e8ebc96f97b00658930dbf1f",
+                "url": "https://api.github.com/repos/tantek/cassis/zipball/b9ec7142179950010c896ec3894aece0a56b0029",
+                "reference": "b9ec7142179950010c896ec3894aece0a56b0029",
                 "shasum": ""
             },
             "type": "library",
             "autoload": {
                 "files": [
-                    "cassis.js"
+                    "cassis-loader.php"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
-            "time": "2013-07-09 07:52:41"
+            "time": "2014-02-18 20:17:32"
         }
     ],
     "packages-dev": [

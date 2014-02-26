@@ -10,7 +10,7 @@
     }
   ],
   "require": {
-    "tantek/cassis": "0.1.*"
+    "tantek/cassis": "0.1.16124"
   },
   "autoload": {
     "files": [
