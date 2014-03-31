@@ -134,6 +134,12 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
         $type = 'repost';
     }
 
+    if($refURL && array_key_exists('like-of', $properties)) {
+      removeScheme($properties['like-of']);
+      if(in_array($refURL, $properties['like-of']))
+        $type = 'like';
+    }
+
     // Check if this post is a "like"
     if($refURL && array_key_exists('like', $properties)) {
       removeScheme($properties['like']);
