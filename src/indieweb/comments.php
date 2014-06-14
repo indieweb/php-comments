@@ -124,12 +124,19 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     // From http://indiewebcamp.com/comments-presentation#How_to_display
 
     // If the entry has an e-content, and if the content is not too long, use that
-    if(array_key_exists('content', $properties)) {
-      $content = $properties['content'][0]['value'];
-      $visibleLines = array_filter(explode("\n", $content));
-      if(strlen($content) <= $maxTextLength && count($visibleLines) <= $maxLines) {
-        $text = $content;
+    if(!empty($properties['content'])) {
+      $content = $properties['content'][0];
+      if ((is_array($content) && array_key_exists('value', $content)) || is_string($content)) {
+        if (is_array($content)) {
+          $content = $content['value'];
+        }
+
+        $visibleLines = array_filter(explode("\n", $content));
+        if(strlen($content) <= $maxTextLength && count($visibleLines) <= $maxLines) {
+          $text = $content;
+        }
       }
+      // If the content is not a string or array with “value”, something is wrong.
     }
 
     // If there is no e-content, or if it is too long

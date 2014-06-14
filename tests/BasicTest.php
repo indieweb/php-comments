@@ -365,5 +365,19 @@ http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $
     $this->assertEquals('http://aaronparecki.com', $result['author']['url']);
   }
 
+  /**
+   * @see https://github.com/indieweb/php-comments/issues/1
+   */
+  public function testWorksWithNonEParsedContentProperty() {
+    $result = IndieWeb\comments\parse([
+      'type' => ['h-entry'],
+      'properties' => [
+        'content' => ['This is a scalar string content property as might have been parsed from p-content']
+      ]
+    ]);
+
+    $this->assertEquals('This is a scalar string content property as might have been parsed from p-content', $result['text']);
+  }
+
 }
 
