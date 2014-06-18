@@ -124,7 +124,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     // From http://indiewebcamp.com/comments-presentation#How_to_display
 
     // If the entry has an e-content, and if the content is not too long, use that
-    if(!empty($properties['content'])) {
+    if(array_key_exists('content', $properties)) {
       $content = $properties['content'][0];
       if ((is_array($content) && array_key_exists('value', $content)) || is_string($content)) {
         if (is_array($content)) {
@@ -153,7 +153,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
       } else {
         // if no p-summary, but there is an e-content, use a truncated e-content
         if(array_key_exists('content', $properties)) {
-          $content = $properties['content'][0]['value'];
+          // $content already exists from line 127, and is guaranteed to be a string.
           $text = truncate($content, $maxTextLength, $maxLines);
         }
       }

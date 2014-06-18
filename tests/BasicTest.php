@@ -367,16 +367,17 @@ http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $
 
   /**
    * @see https://github.com/indieweb/php-comments/issues/1
+   * @see https://github.com/indieweb/php-comments/issues/3
    */
   public function testWorksWithNonEParsedContentProperty() {
     $result = IndieWeb\comments\parse([
       'type' => ['h-entry'],
       'properties' => [
-        'content' => ['This is a scalar string content property as might have been parsed from p-content']
+        'content' => ['This is a scalar string content property as might have been parsed from p-content but very long This is a scalar string content property as might have been parsed from p-content']
       ]
     ]);
 
-    $this->assertEquals('This is a scalar string content property as might have been parsed from p-content', $result['text']);
+    $this->assertEquals('This is a scalar string content property as might have been parsed from p-content but very long This is a scalar string content property as might ...', $result['text']);
   }
 
   /**
