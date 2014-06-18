@@ -379,5 +379,20 @@ http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $
     $this->assertEquals('This is a scalar string content property as might have been parsed from p-content', $result['text']);
   }
 
+  /**
+   * @see https://github.com/indieweb/php-comments/issues/2
+   */
+  public function testHandlesHEntryWithEmptyNameCorrectly() {
+    $result = Indieweb\comments\parse([
+      'type' => ['h-entry'],
+      'properties' => [
+        'name' => [''],
+        'content' => ['Blah blah blah']
+      ]
+    ]);
+
+    $this->assertFalse($result['name']);
+  }
+
 }
 
