@@ -48,6 +48,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     'url' => false
   );
   $rsvp = null;
+  $tag = null;
 
   if(array_key_exists('type', $mf) && in_array('h-entry', $mf['type']) && array_key_exists('properties', $mf)) {
     $properties = $mf['properties'];
@@ -97,6 +98,59 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
             }
           }
         }
+      }
+    }
+    // If the post has an explicit tag-of property, verify it matches $refURL and set the type to "reply"
+    if($refURL && array_key_exists('tag-of', $properties)) {
+      // tag-of may be a string or an h-cite
+      foreach($properties['tag-of'] as $check) {
+        if(is_string($check) && $check == $refURL) {
+          $type = 'tag';
+          continue;
+        } elseif(is_array($check)) {
+          if(array_key_exists('type', $check) && in_array('h-cite', $check['type'])) {
+            if(array_key_exists('properties', $check) && array_key_exists('url', $check['properties'])) {
+              if(in_array($refURL, $check['properties']['url'])) {
+                $type = 'tag';
+              }
+            }
+          }
+        }
+      }
+    }
+    if($type=='tag'){
+      foreach($properties['category'] as $check) {
+          if(is_string($check)){
+              $tag=array('category' => $check);
+          } elseif(is_array($check)){
+              $tag=array();
+              if(array_key_exists('value', $check) && is_string($check['value'])) {
+                  $tag['name'] = $check['value'];
+              }
+              if(array_key_exists('properties', $check) && is_array($check['properties'])){
+                  if(array_key_exists('name', $check['properties'])){
+                      if(is_string($check['properties']['name'])) {
+                          $tag['name'] = $check['properties']['name'];
+                      } elseif (is_array($check['properties']['name']) && is_string($check['properties']['name'][0])) {
+                          $tag['name'] = $check['properties']['name'][0];
+                      }
+                  }
+                  if(array_key_exists('url', $check['properties'])){
+                      if(is_string($check['properties']['url'])) {
+                          $tag['url'] = $check['properties']['url'];
+                      } elseif (is_array($check['properties']['url']) && is_string($check['properties']['url'][0])) {
+                          $tag['url'] = $check['properties']['url'][0];
+                      }
+                  }
+              }
+              if(array_key_exists('shape', $check) && is_string($check['shape'])) {
+                  $tag['shape'] = $check['shape'];
+              }
+              if(array_key_exists('coords', $check) && is_string($check['coords'])) {
+                  $tag['coords'] = $check['coords'];
+              }
+
+          }
       }
     }
 
@@ -211,6 +265,10 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
 
   if($rsvp !== null) {
     $result['rsvp'] = $rsvp;
+  }
+
+  if($tag !== null) {
+    $result['tag'] = $tag;
   }
 
   return $result;
