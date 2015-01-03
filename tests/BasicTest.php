@@ -375,5 +375,35 @@ http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $
     $this->assertEquals('http://aaronparecki.com', $result['author']['url']);
   }
 
+  /**
+   * @see https://github.com/indieweb/php-comments/issues/1
+   * @see https://github.com/indieweb/php-comments/issues/3
+   */
+  public function testWorksWithNonEParsedContentProperty() {
+    $result = IndieWeb\comments\parse([
+      'type' => ['h-entry'],
+      'properties' => [
+        'content' => ['This is a scalar string content property as might have been parsed from p-content but very long This is a scalar string content property as might have been parsed from p-content']
+      ]
+    ]);
+
+    $this->assertEquals('This is a scalar string content property as might have been parsed from p-content but very long This is a scalar string content property as might ...', $result['text']);
+  }
+
+  /**
+   * @see https://github.com/indieweb/php-comments/issues/2
+   */
+  public function testHandlesHEntryWithEmptyNameCorrectly() {
+    $result = Indieweb\comments\parse([
+      'type' => ['h-entry'],
+      'properties' => [
+        'name' => [''],
+        'content' => ['Blah blah blah']
+      ]
+    ]);
+
+    $this->assertFalse($result['name']);
+  }
+
 }
 

@@ -151,11 +151,18 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
 
     // If the entry has an e-content, and if the content is not too long, use that
     if(array_key_exists('content', $properties)) {
-      $content = $properties['content'][0]['value'];
-      $visibleLines = array_filter(explode("\n", $content));
-      if(strlen($content) <= $maxTextLength && count($visibleLines) <= $maxLines) {
-        $text = $content;
+      $content = $properties['content'][0];
+      if ((is_array($content) && array_key_exists('value', $content)) || is_string($content)) {
+        if (is_array($content)) {
+          $content = $content['value'];
+        }
+
+        $visibleLines = array_filter(explode("\n", $content));
+        if(strlen($content) <= $maxTextLength && count($visibleLines) <= $maxLines) {
+          $text = $content;
+        }
       }
+      // If the content is not a string or array with “value”, something is wrong.
     }
 
     // If there is no e-content, or if it is too long
@@ -172,7 +179,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
       } else {
         // if no p-summary, but there is an e-content, use a truncated e-content
         if(array_key_exists('content', $properties)) {
-          $content = $properties['content'][0]['value'];
+          // $content already exists from line 127, and is guaranteed to be a string.
           $text = truncate($content, $maxTextLength, $maxLines);
         }
       }
@@ -206,7 +213,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
         $name = $properties['name'][0];
         $text = false;
       } else {
-        if($nameSanitized != $contentSanitized) {
+        if($nameSanitized != $contentSanitized and $nameSanitized !== '') {
           // If the name is the beginning of the content, we don't care
           // Same if the content is the beginning of the name (like with really long notes)
           if(!(strpos($contentSanitized, $nameSanitized) === 0) && !(strpos($nameSanitized, $contentSanitized) === 0)) {
