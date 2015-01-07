@@ -120,6 +120,29 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
       $type = 'rsvp';
     }
 
+    // Check if the reply is an invitation
+    if(array_key_exists('invitee', $properties)) {
+      $inviteeProperty = $properties['invitee'][0];
+      if(is_array($inviteeProperty)) {
+
+        if(array_key_exists('name', $inviteeProperty['properties'])) {
+          $invitee['name'] = $inviteeProperty['properties']['name'][0];
+        }
+
+        if(array_key_exists('url', $inviteeProperty['properties'])) {
+          $invitee['url'] = $inviteeProperty['properties']['url'][0];
+        }
+
+        if(array_key_exists('photo', $inviteeProperty['properties'])) {
+          $invitee['photo'] = $inviteeProperty['properties']['photo'][0];
+        }
+
+      } elseif(is_string($inviteeProperty)) {
+        $invitee['url'] = $inviteeProperty;
+      }
+      $type = 'invite';
+    }
+
     // Check if this post is a "repost"
     if($refURL && array_key_exists('repost-of', $properties)) {
       removeScheme($properties['repost-of']);
@@ -234,6 +257,9 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     'url' => $url,
     'type' => $type
   );
+
+  if($type == 'invite') 
+    $result['invitee'] = $invitee;
 
   if($rsvp !== null) {
     $result['rsvp'] = $rsvp;
