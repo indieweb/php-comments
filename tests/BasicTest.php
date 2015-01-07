@@ -262,6 +262,16 @@ Amazing. Handheld trigger remote control via Bluetooth. ...", $result['text']);
 http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $result['text']);
   }
 
+  public function testBnvk() {
+    // bnvk linked to the https version of my post, but the site checks exclusively for http mentions
+    $result = IndieWeb\comments\parse($this->loadFile('post-bnvk-1.json'), 'http://aaronparecki.com/notes/2013/10/12/2/indieweb', 400, 2);
+    $this->assertEquals('reply', $result['type']);
+    $this->assertEquals('', $result['name']);
+    $this->assertEquals("Hi ho, hi ho, it's a manual loading and sending of Webmention from my site!
+\t\tReplied at
+\t\tMar 30, 2014", $result['text']);
+  }
+
   /***************************************************************************
    * Other post types
    */

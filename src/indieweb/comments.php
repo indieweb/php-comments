@@ -33,9 +33,22 @@ function truncate($text, $maxTextLength, $maxLines) {
   return $text;
 }
 
+function removeScheme(&$url) {
+  if(is_array($url)) {
+    foreach($url as $i=>$u) {
+      removeScheme($url[$i]);
+    }
+  } else {
+    $url = preg_replace('/^https?/', '', $url);
+  }
+}
+
 function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
   // When parsing a comment, the $refURL is the URL being commented on.
   // This is used to check for an explicit in-reply-to property set to this URL.
+
+  // Remove the scheme from the refURL and treat http and https links as the same
+  removeScheme($refURL);
 
   $type = 'mention';
   $published = false;
@@ -86,6 +99,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     if($refURL && array_key_exists('in-reply-to', $properties)) {
       // in-reply-to may be a string or an h-cite
       foreach($properties['in-reply-to'] as $check) {
+        removeScheme($check);
         if(is_string($check) && $check == $refURL) {
           $type = 'reply';
           continue;
@@ -161,18 +175,30 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     }
 
     // Check if this post is a "repost"
-    if($refURL && array_key_exists('repost-of', $properties) && in_array($refURL, $properties['repost-of'])) {
-      $type = 'repost';
+    if($refURL && array_key_exists('repost-of', $properties)) {
+      removeScheme($properties['repost-of']);
+      if(in_array($refURL, $properties['repost-of']))
+        $type = 'repost';
     }
 
     // Also check for "u-repost" since some people are sending that. Probably "u-repost-of" will win out.
-    if($refURL && array_key_exists('repost', $properties) && in_array($refURL, $properties['repost'])) {
-      $type = 'repost';
+    if($refURL && array_key_exists('repost', $properties)) {
+      removeScheme($properties['repost']);
+      if(in_array($refURL, $properties['repost']))
+        $type = 'repost';
+    }
+
+    if($refURL && array_key_exists('like-of', $properties)) {
+      removeScheme($properties['like-of']);
+      if(in_array($refURL, $properties['like-of']))
+        $type = 'like';
     }
 
     // Check if this post is a "like"
-    if($refURL && array_key_exists('like', $properties) && in_array($refURL, $properties['like'])) {
-      $type = 'like';
+    if($refURL && array_key_exists('like', $properties)) {
+      removeScheme($properties['like']);
+      if(in_array($refURL, $properties['like']))
+        $type = 'like';
     }
 
     // From http://indiewebcamp.com/comments-presentation#How_to_display
