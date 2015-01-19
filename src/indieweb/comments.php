@@ -193,6 +193,9 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
       // if the h-entry has a p-summary, and the text is not too long, use that
       if(array_key_exists('summary', $properties)) {
         $summary = $properties['summary'][0];
+        if(is_array($summary) && array_key_exists('value', $summary))
+          $summary = $summary['value'];
+
         if(strlen($summary) <= $maxTextLength) {
           $text = $summary;
         } else {
