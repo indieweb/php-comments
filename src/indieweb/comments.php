@@ -114,10 +114,11 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
         }
       }
     }
-    // If the post has an explicit tag-of property, verify it matches $refURL and set the type to "reply"
+    // If the post has an explicit tag-of property, verify it matches $refURL and set the type to "tag"
     if($refURL && array_key_exists('tag-of', $properties)) {
       // tag-of may be a string or an h-cite
       foreach($properties['tag-of'] as $check) {
+        removeScheme($check);
         if(is_string($check) && $check == $refURL) {
           $type = 'tag';
           continue;
@@ -130,6 +131,29 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
             }
           }
         }
+      }
+      //this could be something you are actually tagged in
+      if($type != 'tag'){
+          foreach($properties['category'] as $check){
+                     if(isset($check['type']) && in_array('h-card', $check['type'])) {
+                         if(array_key_exists('properties', $check) && array_key_exists('url', $check['properties'])){ 
+                             
+                             foreach( $check['properties']['url'] as $test_url){
+                                 removeScheme($test_url); 
+                                 if(is_string($test_url) && $test_url == $refURL) {
+                                      $type = 'tagged';
+                                      continue;
+                                 }
+                             }
+
+                          }
+                     }
+              if(is_array($cat)){
+                  foreach($cat as $check){
+                  }
+              }
+          }
+
       }
     }
     if($type=='tag'){
@@ -163,7 +187,6 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
               if(array_key_exists('coords', $check) && is_string($check['coords'])) {
                   $tag['coords'] = $check['coords'];
               }
-
           }
       }
     }
@@ -289,7 +312,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
 
       // If this is a "mention" instead of a "reply", and if there is no "content" property,
       // then we actually want to use the "name" property as the name and leave "text" blank.
-      if($type == 'mention' && !array_key_exists('content', $properties)) {
+      if(($type == 'mention' || $type == 'tagged') && !array_key_exists('content', $properties)) {
         $name = $properties['name'][0];
         $text = false;
       } else {
