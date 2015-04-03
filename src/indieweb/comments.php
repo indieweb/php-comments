@@ -157,38 +157,40 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
       }
     }
     if($type=='tag'){
-      foreach($properties['category'] as $check) {
-          if(is_string($check)){
-              $tag=array('category' => $check);
-          } elseif(is_array($check)){
-              $tag=array();
-              if(array_key_exists('value', $check) && is_string($check['value'])) {
-                  $tag['name'] = $check['value'];
-              }
-              if(array_key_exists('properties', $check) && is_array($check['properties'])){
-                  if(array_key_exists('name', $check['properties'])){
-                      if(is_string($check['properties']['name'])) {
-                          $tag['name'] = $check['properties']['name'];
-                      } elseif (is_array($check['properties']['name']) && is_string($check['properties']['name'][0])) {
-                          $tag['name'] = $check['properties']['name'][0];
-                      }
-                  }
-                  if(array_key_exists('url', $check['properties'])){
-                      if(is_string($check['properties']['url'])) {
-                          $tag['url'] = $check['properties']['url'];
-                      } elseif (is_array($check['properties']['url']) && is_string($check['properties']['url'][0])) {
-                          $tag['url'] = $check['properties']['url'][0];
-                      }
-                  }
-              }
-              if(array_key_exists('shape', $check) && is_string($check['shape'])) {
-                  $tag['shape'] = $check['shape'];
-              }
-              if(array_key_exists('coords', $check) && is_string($check['coords'])) {
-                  $tag['coords'] = $check['coords'];
-              }
-          }
-      }
+        $tags = array();
+        foreach($properties['category'] as $check) {
+            if(is_string($check)){
+                $tag=array('category' => $check);
+            } elseif(is_array($check)){
+                $tag=array();
+                if(array_key_exists('value', $check) && is_string($check['value'])) {
+                    $tag['name'] = $check['value'];
+                }
+                if(array_key_exists('properties', $check) && is_array($check['properties'])){
+                    if(array_key_exists('name', $check['properties'])){
+                        if(is_string($check['properties']['name'])) {
+                            $tag['name'] = $check['properties']['name'];
+                        } elseif (is_array($check['properties']['name']) && is_string($check['properties']['name'][0])) {
+                            $tag['name'] = $check['properties']['name'][0];
+                        }
+                    }
+                    if(array_key_exists('url', $check['properties'])){
+                        if(is_string($check['properties']['url'])) {
+                            $tag['url'] = $check['properties']['url'];
+                        } elseif (is_array($check['properties']['url']) && is_string($check['properties']['url'][0])) {
+                            $tag['url'] = $check['properties']['url'][0];
+                        }
+                    }
+                }
+                if(array_key_exists('shape', $check) && is_string($check['shape'])) {
+                    $tag['shape'] = $check['shape'];
+                }
+                if(array_key_exists('coords', $check) && is_string($check['coords'])) {
+                    $tag['coords'] = $check['coords'];
+                }
+            }
+            $tags[] = $tag;
+        }
     }
 
     // Check if the reply is an RSVP
@@ -345,8 +347,8 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     $result['rsvp'] = $rsvp;
   }
 
-  if($tag !== null) {
-    $result['tag'] = $tag;
+  if($tags !== null) {
+    $result['tags'] = $tags;
   }
 
   return $result;
