@@ -94,6 +94,12 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     if(array_key_exists('url', $properties)) {
       $url = $properties['url'][0];
     }
+    if(array_key_exists('syndication', $properties)) {
+      $syndications = array();
+      foreach($properties['syndication'] as $syndication_link){
+        $syndications[] = $syndication_link;
+      }
+    }
 
     // If the post has an explicit in-reply-to property, verify it matches $refURL and set the type to "reply"
     if($refURL && array_key_exists('in-reply-to', $properties)) {
@@ -337,6 +343,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     'name' => $name,
     'text' => $text,
     'url' => $url,
+    'syndications' => $syndications,
     'type' => $type
   );
 
