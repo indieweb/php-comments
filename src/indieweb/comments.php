@@ -61,7 +61,8 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     'url' => false
   );
   $rsvp = null;
-  $tag = null;
+  $tags = null;
+  $syndications = null;
 
   if(array_key_exists('type', $mf) && in_array('h-entry', $mf['type']) && array_key_exists('properties', $mf)) {
     $properties = $mf['properties'];
@@ -343,7 +344,6 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     'name' => $name,
     'text' => $text,
     'url' => $url,
-    'syndications' => $syndications,
     'type' => $type
   );
 
@@ -356,6 +356,10 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
 
   if($tags !== null) {
     $result['tags'] = $tags;
+  }
+
+  if($syndications !== null) {
+    $result['syndications'] = $syndications;
   }
 
   return $result;
