@@ -60,6 +60,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     'photo' => false,
     'url' => false
   );
+  $comments = array();
   $rsvp = null;
   $tags = null;
   $syndications = null;
@@ -95,6 +96,13 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     if(array_key_exists('url', $properties)) {
       $url = $properties['url'][0];
     }
+
+    if(array_key_exists('comment', $properties)) {
+      foreach($properties['comment'] as $comment) {
+        $comments[] = $this->parse($comment, $url, $maxTextLength, $maxLines); // recurse for all comments
+      }
+    }
+
     if(array_key_exists('syndication', $properties)) {
       $syndications = array();
       foreach($properties['syndication'] as $syndication_link){
@@ -347,19 +355,21 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     'type' => $type
   );
 
+  if(!empty($syndications)){
+    $result['syndications'] = $syndications;
+  }
   if($type == 'invite') 
     $result['invitee'] = $invitee;
 
   if($rsvp !== null) {
     $result['rsvp'] = $rsvp;
   }
+  if(!empty($comments)) {
+    $result['comments'] = $comments;
+  }
 
   if($tags !== null) {
     $result['tags'] = $tags;
-  }
-
-  if($syndications !== null) {
-    $result['syndications'] = $syndications;
   }
 
   return $result;
