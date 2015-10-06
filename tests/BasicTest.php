@@ -179,6 +179,15 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('The name of the post is different ...', $result['text']);
   }
 
+  public function testNameIsTooLong() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'This is the name of the post but it is far too long. This sometimes happens when the name was generated from the implied parsing rules.'
+    ), false, false), $this->_refURL, 40);
+    $this->assertEquals('mention', $result['type']);
+    $this->assertEquals('This is the name of the post but it ...', $result['name']);
+    $this->assertEquals('', $result['text']);
+  }
+
   public function testNoMicroformatsIsMention() {
     $result = IndieWeb\comments\parse(array(), $this->_refURL, 200);
     $this->assertEquals('mention', $result['type']);

@@ -236,7 +236,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
       // If this is a "mention" instead of a "reply", and if there is no "content" property,
       // then we actually want to use the "name" property as the name and leave "text" blank.
       if($type == 'mention' && !array_key_exists('content', $properties)) {
-        $name = $properties['name'][0];
+        $name = truncate($properties['name'][0], $maxTextLength, $maxLines);
         $text = false;
       } else {
         if($nameSanitized != $contentSanitized and $nameSanitized !== '') {
