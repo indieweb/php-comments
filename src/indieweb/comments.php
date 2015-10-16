@@ -74,7 +74,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
   $tags = null;
   $syndications = null;
 
-  if(array_key_exists('type', $mf) && in_array('h-entry', $mf['type']) && array_key_exists('properties', $mf)) {
+  if ( array_key_exists('type', $mf) && (in_array('h-entry', $mf['type']) || in_array('h-cite', $mf['type'])) && array_key_exists('properties', $mf)) {
     $properties = $mf['properties'];
 
     if(array_key_exists('author', $properties)) {
@@ -108,7 +108,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
 
     if(array_key_exists('comment', $properties)) {
       foreach($properties['comment'] as $comment) {
-        $comments[] = $this->parse($comment, $url, $maxTextLength, $maxLines); // recurse for all comments
+        $comments[] = parse($comment, $url, $maxTextLength, $maxLines); // recurse for all comments
       }
     }
 
