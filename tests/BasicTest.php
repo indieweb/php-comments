@@ -179,6 +179,15 @@ class BasicTest extends PHPUnit_Framework_TestCase {
     $this->assertEquals('The name of the post is different ...', $result['text']);
   }
 
+  public function testNameIsTooLong() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'This is the name of the post but it is far too long. This sometimes happens when the name was generated from the implied parsing rules.'
+    ), false, false), $this->_refURL, 40);
+    $this->assertEquals('mention', $result['type']);
+    $this->assertEquals('This is the name of the post but it ...', $result['name']);
+    $this->assertEquals('', $result['text']);
+  }
+
   public function testNoMicroformatsIsMention() {
     $result = IndieWeb\comments\parse(array(), $this->_refURL, 200);
     $this->assertEquals('mention', $result['type']);
@@ -297,6 +306,16 @@ http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $
     $this->assertEquals('liked this post', $result['text']);
   }
 
+  public function testIsLikeOf() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'Liked this',
+      'content' => 'liked this post',
+      'like-of' => $this->_refURL
+    )), $this->_refURL, 200);
+    $this->assertEquals('like', $result['type']);
+    $this->assertEquals('liked this post', $result['text']);
+  }
+
   public function testIsRepostOf() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'Reposted this',
@@ -324,6 +343,21 @@ http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $
     ), false, false), $this->_refURL, 40);
     $this->assertEquals('mention', $result['type']);
     $this->assertEquals('The name of the post is different ...', $result['text']);
+  }
+
+  public function testIsLikeOfHCite() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'Liked this',
+      'content' => 'liked this post',
+      'like-of' => array(
+        'type' => 'h-cite',
+        'properties' => array(
+          'url' => array($this->_refURL)
+        )
+      )
+    )), $this->_refURL, 200);
+    $this->assertEquals('like', $result['type']);
+    $this->assertEquals('liked this post', $result['text']);
   }
 
   /***************************************************************************

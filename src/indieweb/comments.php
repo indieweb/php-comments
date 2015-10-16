@@ -33,13 +33,22 @@ function truncate($text, $maxTextLength, $maxLines) {
   return $text;
 }
 
-function removeScheme(&$url) {
-  if(is_array($url)) {
-    foreach($url as $i=>$u) {
-      removeScheme($url[$i]);
+// Collects all URLs found in the input array, and remove the scheme.
+// An input object may be a string URL or also an mf2 object with properties.url
+function collectURLs(&$urls) {
+  if(is_array($urls) && array_key_exists(0, $urls)) {
+    foreach($urls as $i=>$u) {
+      collectURLs($urls[$i]);
     }
-  } else {
-    $url = preg_replace('/^https?/', '', $url);
+  } elseif(is_array($urls) 
+    && array_key_exists('type', $urls)
+    && array_key_exists('properties', $urls)
+    && array_key_exists('url', $urls['properties'])
+    ) {
+    // Flatten the object and turn it just into the URL
+    $urls = preg_replace('/^https?/', '', $urls['properties']['url'][0]);
+  } elseif(is_string($urls)) {
+    $urls = preg_replace('/^https?/', '', $urls);
   }
 }
 
@@ -48,7 +57,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
   // This is used to check for an explicit in-reply-to property set to this URL.
 
   // Remove the scheme from the refURL and treat http and https links as the same
-  removeScheme($refURL);
+  collectURLs($refURL);
 
   $type = 'mention';
   $published = false;
@@ -114,7 +123,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     if($refURL && array_key_exists('in-reply-to', $properties)) {
       // in-reply-to may be a string or an h-cite
       foreach($properties['in-reply-to'] as $check) {
-        removeScheme($check);
+        collectURLs($check);
         if(is_string($check) && $check == $refURL) {
           $type = 'reply';
           continue;
@@ -239,27 +248,28 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
 
     // Check if this post is a "repost"
     if($refURL && array_key_exists('repost-of', $properties)) {
-      removeScheme($properties['repost-of']);
+      collectURLs($properties['repost-of']);
       if(in_array($refURL, $properties['repost-of']))
         $type = 'repost';
     }
 
     // Also check for "u-repost" since some people are sending that. Probably "u-repost-of" will win out.
     if($refURL && array_key_exists('repost', $properties)) {
-      removeScheme($properties['repost']);
+      collectURLs($properties['repost']);
       if(in_array($refURL, $properties['repost']))
         $type = 'repost';
     }
 
+    // Check if this post is a "like-of"
     if($refURL && array_key_exists('like-of', $properties)) {
-      removeScheme($properties['like-of']);
+      collectURLs($properties['like-of']);
       if(in_array($refURL, $properties['like-of']))
         $type = 'like';
     }
 
-    // Check if this post is a "like"
+    // Check if this post is a "like" (Should be deprecated in the future)
     if($refURL && array_key_exists('like', $properties)) {
-      removeScheme($properties['like']);
+      collectURLs($properties['like']);
       if(in_array($refURL, $properties['like']))
         $type = 'like';
     }
@@ -329,8 +339,10 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
 
       // If this is a "mention" instead of a "reply", and if there is no "content" property,
       // then we actually want to use the "name" property as the name and leave "text" blank.
+    
+      //if($type == 'mention' && !array_key_exists('content', $properties)) {
       if(($type == 'mention' || $type == 'tagged') && !array_key_exists('content', $properties)) {
-        $name = $properties['name'][0];
+        $name = truncate($properties['name'][0], $maxTextLength, $maxLines);
         $text = false;
       } else {
         if($nameSanitized != $contentSanitized and $nameSanitized !== '') {
