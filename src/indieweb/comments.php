@@ -119,6 +119,20 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
       }
     }
 
+    // Check if this post is a "like-of"
+    if($refURL && array_key_exists('like-of', $properties)) {
+      collectURLs($properties['like-of']);
+      if(in_array($refURL, $properties['like-of']))
+        $type = 'like';
+    }
+
+    // Check if this post is a "like" (Should be deprecated in the future)
+    if($refURL && array_key_exists('like', $properties)) {
+      collectURLs($properties['like']);
+      if(in_array($refURL, $properties['like']))
+        $type = 'like';
+    }
+
     // If the post has an explicit in-reply-to property, verify it matches $refURL and set the type to "reply"
     if($refURL && array_key_exists('in-reply-to', $properties)) {
       // in-reply-to may be a string or an h-cite
@@ -258,20 +272,6 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
       collectURLs($properties['repost']);
       if(in_array($refURL, $properties['repost']))
         $type = 'repost';
-    }
-
-    // Check if this post is a "like-of"
-    if($refURL && array_key_exists('like-of', $properties)) {
-      collectURLs($properties['like-of']);
-      if(in_array($refURL, $properties['like-of']))
-        $type = 'like';
-    }
-
-    // Check if this post is a "like" (Should be deprecated in the future)
-    if($refURL && array_key_exists('like', $properties)) {
-      collectURLs($properties['like']);
-      if(in_array($refURL, $properties['like']))
-        $type = 'like';
     }
 
     // From http://indiewebcamp.com/comments-presentation#How_to_display
