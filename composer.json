@@ -10,11 +10,11 @@
     }
   ],
   "require": {
-    "tantek/cassis": "0.1.16124"
+    "tantek/cassis": "dev-master#028a460ae003a46059c765fa6d4246b1c2ff5d97"
   },
   "autoload": {
     "files": [
       "src/indieweb/comments.php"
-    ]    
+    ]
   }
 }
