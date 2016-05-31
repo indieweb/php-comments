@@ -67,9 +67,12 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     'photo' => false,
     'url' => false
   );
+  $comments = array();
   $rsvp = null;
+  $tags = null;
+  $syndications = null;
 
-  if(array_key_exists('type', $mf) && in_array('h-entry', $mf['type']) && array_key_exists('properties', $mf)) {
+  if ( array_key_exists('type', $mf) && (in_array('h-entry', $mf['type']) || in_array('h-cite', $mf['type'])) && array_key_exists('properties', $mf)) {
     $properties = $mf['properties'];
 
     if(array_key_exists('author', $properties)) {
@@ -101,6 +104,33 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
       $url = $properties['url'][0];
     }
 
+    if(array_key_exists('comment', $properties)) {
+      foreach($properties['comment'] as $comment) {
+        $comments[] = parse($comment, $url, $maxTextLength, $maxLines); // recurse for all comments
+      }
+    }
+
+    if(array_key_exists('syndication', $properties)) {
+      $syndications = array();
+      foreach($properties['syndication'] as $syndication_link){
+        $syndications[] = $syndication_link;
+      }
+    }
+
+    // Check if this post is a "like-of"
+    if($refURL && array_key_exists('like-of', $properties)) {
+      collectURLs($properties['like-of']);
+      if(in_array($refURL, $properties['like-of']))
+        $type = 'like';
+    }
+
+    // Check if this post is a "like" (Should be deprecated in the future)
+    if($refURL && array_key_exists('like', $properties)) {
+      collectURLs($properties['like']);
+      if(in_array($refURL, $properties['like']))
+        $type = 'like';
+    }
+
     // If the post has an explicit in-reply-to property, verify it matches $refURL and set the type to "reply"
     if($refURL && array_key_exists('in-reply-to', $properties)) {
       // in-reply-to may be a string or an h-cite
@@ -119,6 +149,84 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
           }
         }
       }
+    }
+    // If the post has an explicit tag-of property, verify it matches $refURL and set the type to "tag"
+    if($refURL && array_key_exists('tag-of', $properties)) {
+      // tag-of may be a string or an h-cite
+      foreach($properties['tag-of'] as $check) {
+        removeScheme($check);
+        if(is_string($check) && $check == $refURL) {
+          $type = 'tag';
+          continue;
+        } elseif(is_array($check)) {
+          if(array_key_exists('type', $check) && in_array('h-cite', $check['type'])) {
+            if(array_key_exists('properties', $check) && array_key_exists('url', $check['properties'])) {
+              if(in_array($refURL, $check['properties']['url'])) {
+                $type = 'tag';
+              }
+            }
+          }
+        }
+      }
+      //this could be something you are actually tagged in
+      if($type != 'tag'){
+          foreach($properties['category'] as $check){
+                     if(isset($check['type']) && in_array('h-card', $check['type'])) {
+                         if(array_key_exists('properties', $check) && array_key_exists('url', $check['properties'])){ 
+                             
+                             foreach( $check['properties']['url'] as $test_url){
+                                 removeScheme($test_url); 
+                                 if(is_string($test_url) && $test_url == $refURL) {
+                                      $type = 'tagged';
+                                      continue;
+                                 }
+                             }
+
+                          }
+                     }
+              if(is_array($cat)){
+                  foreach($cat as $check){
+                  }
+              }
+          }
+
+      }
+    }
+    if($type=='tag'){
+        $tags = array();
+        foreach($properties['category'] as $check) {
+            if(is_string($check)){
+                $tag=array('category' => $check);
+            } elseif(is_array($check)){
+                $tag=array();
+                if(array_key_exists('value', $check) && is_string($check['value'])) {
+                    $tag['name'] = $check['value'];
+                }
+                if(array_key_exists('properties', $check) && is_array($check['properties'])){
+                    if(array_key_exists('name', $check['properties'])){
+                        if(is_string($check['properties']['name'])) {
+                            $tag['name'] = $check['properties']['name'];
+                        } elseif (is_array($check['properties']['name']) && is_string($check['properties']['name'][0])) {
+                            $tag['name'] = $check['properties']['name'][0];
+                        }
+                    }
+                    if(array_key_exists('url', $check['properties'])){
+                        if(is_string($check['properties']['url'])) {
+                            $tag['url'] = $check['properties']['url'];
+                        } elseif (is_array($check['properties']['url']) && is_string($check['properties']['url'][0])) {
+                            $tag['url'] = $check['properties']['url'][0];
+                        }
+                    }
+                }
+                if(array_key_exists('shape', $check) && is_string($check['shape'])) {
+                    $tag['shape'] = $check['shape'];
+                }
+                if(array_key_exists('coords', $check) && is_string($check['coords'])) {
+                    $tag['coords'] = $check['coords'];
+                }
+            }
+            $tags[] = $tag;
+        }
     }
 
     // Check if the reply is an RSVP
@@ -162,20 +270,6 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
       collectURLs($properties['repost']);
       if(in_array($refURL, $properties['repost']))
         $type = 'repost';
-    }
-
-    // Check if this post is a "like-of"
-    if($refURL && array_key_exists('like-of', $properties)) {
-      collectURLs($properties['like-of']);
-      if(in_array($refURL, $properties['like-of']))
-        $type = 'like';
-    }
-
-    // Check if this post is a "like" (Should be deprecated in the future)
-    if($refURL && array_key_exists('like', $properties)) {
-      collectURLs($properties['like']);
-      if(in_array($refURL, $properties['like']))
-        $type = 'like';
     }
 
     // From http://indiewebcamp.com/comments-presentation#How_to_display
@@ -243,7 +337,9 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
 
       // If this is a "mention" instead of a "reply", and if there is no "content" property,
       // then we actually want to use the "name" property as the name and leave "text" blank.
-      if($type == 'mention' && !array_key_exists('content', $properties)) {
+    
+      //if($type == 'mention' && !array_key_exists('content', $properties)) {
+      if(($type == 'mention' || $type == 'tagged') && !array_key_exists('content', $properties)) {
         $name = truncate($properties['name'][0], $maxTextLength, $maxLines);
         $text = false;
       } else {
@@ -269,11 +365,21 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     'type' => $type
   );
 
+  if(!empty($syndications)){
+    $result['syndications'] = $syndications;
+  }
   if($type == 'invite')
     $result['invitee'] = $invitee;
 
   if($rsvp !== null) {
     $result['rsvp'] = $rsvp;
+  }
+  if(!empty($comments)) {
+    $result['comments'] = $comments;
+  }
+
+  if($tags !== null) {
+    $result['tags'] = $tags;
   }
 
   return $result;
