@@ -1,48 +1,44 @@
 {
     "_readme": [
         "This file locks the dependencies of your project to a known state",
-        "Read more about it at http://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file"
+        "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
+        "This file is @generated automatically"
     ],
-    "hash": "31325b3b2b8208a00c3991ac539014a5",
+    "hash": "626c113902b70424864fcde7e5e58533",
+    "content-hash": "3fdcfbe5097f97bd38f86937fe61bcaf",
     "packages": [
         {
             "name": "tantek/cassis",
-            "version": "v0.1.16124",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/tantek/cassis.git",
-                "reference": "b9ec7142179950010c896ec3894aece0a56b0029"
+                "reference": "028a460ae003a46059c765fa6d4246b1c2ff5d97"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/tantek/cassis/zipball/b9ec7142179950010c896ec3894aece0a56b0029",
-                "reference": "b9ec7142179950010c896ec3894aece0a56b0029",
+                "url": "https://api.github.com/repos/tantek/cassis/zipball/028a460ae003a46059c765fa6d4246b1c2ff5d97",
+                "reference": "028a460ae003a46059c765fa6d4246b1c2ff5d97",
                 "shasum": ""
             },
             "type": "library",
             "autoload": {
                 "files": [
-                    "cassis-loader.php"
+                    "cassis.php"
                 ]
             },
             "notification-url": "https://packagist.org/downloads/",
-            "time": "2014-02-18 20:17:32"
+            "time": "2016-01-24 20:26:09"
         }
     ],
-    "packages-dev": [
-
-    ],
-    "aliases": [
-
-    ],
+    "packages-dev": [],
+    "aliases": [],
     "minimum-stability": "stable",
-    "stability-flags": [
-
-    ],
-    "platform": [
-
-    ],
-    "platform-dev": [
-
-    ]
+    "stability-flags": {
+        "tantek/cassis": 20
+    },
+    "prefer-stable": false,
+    "prefer-lowest": false,
+    "platform": [],
+    "platform-dev": []
 }

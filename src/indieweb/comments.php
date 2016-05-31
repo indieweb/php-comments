@@ -2,9 +2,7 @@
 namespace IndieWeb\comments;
 
 function truncateString($text, $length) {
-  ob_start();
   $short = ellipsize_to_word($text, $length, '...', 10);
-  ob_end_clean();
   return $short;
 }
 
@@ -40,7 +38,7 @@ function collectURLs(&$urls) {
     foreach($urls as $i=>$u) {
       collectURLs($urls[$i]);
     }
-  } elseif(is_array($urls) 
+  } elseif(is_array($urls)
     && array_key_exists('type', $urls)
     && array_key_exists('properties', $urls)
     && array_key_exists('url', $urls['properties'])
@@ -370,7 +368,7 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
   if(!empty($syndications)){
     $result['syndications'] = $syndications;
   }
-  if($type == 'invite') 
+  if($type == 'invite')
     $result['invitee'] = $invitee;
 
   if($rsvp !== null) {
@@ -386,4 +384,3 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
 
   return $result;
 }
-
