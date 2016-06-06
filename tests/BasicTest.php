@@ -20,7 +20,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
               'photo' => array('http://aaronparecki.com/images/aaronpk.png')
             )
           ))
-        ), 
+        ),
         'published' => array('2014-02-16T18:48:17-0800'),
         'url' => array('http://aaronparecki.com/post/1'),
       )
@@ -29,7 +29,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
       $entry['properties']['in-reply-to'] = array($this->_refURL);
     }
     if(is_array($replyTo)) {
-      $entry['properties']['in-reply-to'] = array($replyTo);      
+      $entry['properties']['in-reply-to'] = array($replyTo);
     }
     if(array_key_exists('content', $input)) {
       if(is_string($input['content'])) {
@@ -51,8 +51,8 @@ class BasicTest extends PHPUnit_Framework_TestCase {
 
   public function testBasicExample() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
-      'name' => 'post name', 
-      'summary' => 'post summary', 
+      'name' => 'post name',
+      'summary' => 'post summary',
       'content' => 'this is some content'
     )), $this->_refURL, 90);
     $this->assertEquals(array(
@@ -71,8 +71,8 @@ class BasicTest extends PHPUnit_Framework_TestCase {
 
   public function testContentTooLongSummaryIsOk() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
-      'name' => 'post name', 
-      'summary' => 'post summary', 
+      'name' => 'post name',
+      'summary' => 'post summary',
       'content' => '<p>this is some content but it is longer than 90 characters so the summary will be used instead</p>'
     )), $this->_refURL, 90);
     $this->assertEquals('reply', $result['type']);
@@ -81,8 +81,8 @@ class BasicTest extends PHPUnit_Framework_TestCase {
 
   public function testContentTooLongSummaryTooLong() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
-      'name' => 'post name', 
-      'summary' => 'in this case the post summary is also too long, so a truncated version should be displayed instead', 
+      'name' => 'post name',
+      'summary' => 'in this case the post summary is also too long, so a truncated version should be displayed instead',
       'content' => '<p>this is some content but it is longer than 90 characters so the summary will be used instead</p>'
     )), $this->_refURL, 90);
     $this->assertEquals('reply', $result['type']);
@@ -91,7 +91,7 @@ class BasicTest extends PHPUnit_Framework_TestCase {
 
   public function testContentTooLongNoSummary() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
-      'name' => 'post name', 
+      'name' => 'post name',
       'content' => '<p>this is some content but it is longer than 90 characters so it will be truncated because there is no summary</p>'
     )), $this->_refURL, 90);
     $this->assertEquals('reply', $result['type']);
@@ -228,13 +228,13 @@ Line three', $result['text']);
   public function testTrimMultiLineCommentHalfWayThroughThirdLine() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'content' => array(
-        'html' => '#HouseOfCards s2e1 was good. 
+        'html' => '#HouseOfCards s2e1 was good.
 But the best thing yesterday was getting to try a Boosted electric skateboard: <a class="auto-link" href="http://boostedboards.com/">http://boostedboards.com/</a>
 
 Amazing. Handheld trigger remote control via Bluetooth. Forward and reverse. And I only tried it in &quot;turtle&quot; mode. In &quot;rabbit&quot; mode it can apparently do 20 miles an hour. Up hill. Jetsons-like motor sound included.
 
 Forget about Segway, Boosted&#039;s electric skateboard feels like an object from the future dropped into the present, more in the realm of Marty&#039;s hoverboard (Back To The Future II &amp; III) and Y.T.&#039;s Smartwheels skateboard (Snow Crash).',
-        'value' => "#HouseOfCards s2e1 was good. 
+        'value' => "#HouseOfCards s2e1 was good.
 But the best thing yesterday was getting to try a Boosted electric skateboard: http://boostedboards.com/
 
 Amazing. Handheld trigger remote control via Bluetooth. Forward and reverse. And I only tried it in \"turtle\" mode. In \"rabbit\" mode it can apparently do 20 miles an hour. Up hill. Jetsons-like motor sound included.
@@ -244,7 +244,7 @@ Forget about Segway, Boosted&#039;s electric skateboard feels like an object fro
     ), false, false), $this->_refURL, 197, 3);
     $this->assertEquals('mention', $result['type']);
     $this->assertEquals('', $result['name']);
-    $this->assertEquals("#HouseOfCards s2e1 was good. 
+    $this->assertEquals("#HouseOfCards s2e1 was good.
 But the best thing yesterday was getting to try a Boosted electric skateboard: http://boostedboards.com/
 
 Amazing. Handheld trigger remote control via Bluetooth. ...", $result['text']);
@@ -316,11 +316,51 @@ http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $
     $this->assertEquals('liked this post', $result['text']);
   }
 
+  public function testIsULikeOf() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'Liked this',
+      'content' => 'liked this post',
+      'u-like-of' => $this->_refURL
+    )), $this->_refURL, 200);
+    $this->assertEquals('like', $result['type']);
+    $this->assertEquals('liked this post', $result['text']);
+  }
+
+  public function testIsULike() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'Liked this',
+      'content' => 'liked this post',
+      'u-like' => $this->_refURL
+    )), $this->_refURL, 200);
+    $this->assertEquals('like', $result['type']);
+    $this->assertEquals('liked this post', $result['text']);
+  }
+
   public function testIsRepostOf() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'Reposted this',
       'content' => 'Reposted this',
       'repost-of' => $this->_refURL
+    )), $this->_refURL, 200);
+    $this->assertEquals('repost', $result['type']);
+    $this->assertEquals('Reposted this', $result['text']);
+  }
+
+  public function testIsURepostOf() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'Reposted this',
+      'content' => 'Reposted this',
+      'u-repost-of' => $this->_refURL
+    )), $this->_refURL, 200);
+    $this->assertEquals('repost', $result['type']);
+    $this->assertEquals('Reposted this', $result['text']);
+  }
+
+  public function testIsURepost() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'Reposted this',
+      'content' => 'Reposted this',
+      'u-repost' => $this->_refURL
     )), $this->_refURL, 200);
     $this->assertEquals('repost', $result['type']);
     $this->assertEquals('Reposted this', $result['text']);
@@ -366,8 +406,8 @@ http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $
 
   public function testAuthorIsURL() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
-      'name' => 'post name', 
-      'summary' => 'post summary', 
+      'name' => 'post name',
+      'summary' => 'post summary',
       'content' => '<p>this is some content</p>'
     ), 'http://aaronparecki.com/'), $this->_refURL, 200);
     $author = $result['author'];
@@ -379,8 +419,8 @@ http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $
 
   public function testAuthorIsHCard() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
-      'name' => 'post name', 
-      'summary' => 'post summary', 
+      'name' => 'post name',
+      'summary' => 'post summary',
       'content' => '<p>this is some content</p>'
     )), $this->_refURL, 200);
     $author = $result['author'];
@@ -392,8 +432,8 @@ http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $
 
   public function testAuthorIsHCardWithNoPhoto() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
-      'name' => 'post name', 
-      'summary' => 'post summary', 
+      'name' => 'post name',
+      'summary' => 'post summary',
       'content' => '<p>this is some content</p>'
       ), array(
         'type' => array('h-card'),
