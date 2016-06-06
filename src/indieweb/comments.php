@@ -151,31 +151,26 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
     }
 
     // Check if this post is a "repost"
-    if($refURL && array_key_exists('repost-of', $properties)) {
-      collectURLs($properties['repost-of']);
-      if(in_array($refURL, $properties['repost-of']))
-        $type = 'repost';
-    }
-
     // Also check for "u-repost" since some people are sending that. Probably "u-repost-of" will win out.
-    if($refURL && array_key_exists('repost', $properties)) {
-      collectURLs($properties['repost']);
-      if(in_array($refURL, $properties['repost']))
-        $type = 'repost';
+    foreach(array('repost-of', 'u-repost-of', 'u-repost', 'repost') as $repost) {
+      if($refURL && array_key_exists($repost, $properties)) {
+        collectURLs($properties[$repost]);
+        if(in_array($refURL, $properties[$repost]))
+          $type = 'repost';
+          break;
+      }
     }
 
-    // Check if this post is a "like-of"
-    if($refURL && array_key_exists('like-of', $properties)) {
-      collectURLs($properties['like-of']);
-      if(in_array($refURL, $properties['like-of']))
-        $type = 'like';
-    }
-
-    // Check if this post is a "like" (Should be deprecated in the future)
-    if($refURL && array_key_exists('like', $properties)) {
-      collectURLs($properties['like']);
-      if(in_array($refURL, $properties['like']))
-        $type = 'like';
+    // Check if this post is a "like"
+    // Prefer "like-of" but also check for "u-lile-of", "u-like" and "like" (should be deprecated in the future)
+    foreach(array('like-of', 'u-like-of', 'u-like', 'like') as $like) {
+      if($refURL && array_key_exists($like, $properties)) {
+        collectURLs($properties[$like]);
+        if(in_array($refURL, $properties[$like])) {
+          $type = 'like';
+          break;
+        }
+      }
     }
 
     // From http://indiewebcamp.com/comments-presentation#How_to_display
