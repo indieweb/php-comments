@@ -91,6 +91,8 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
       } elseif(is_string($authorProperty)) {
         $author['url'] = $authorProperty;
       }
+    } elseif(array_key_exists('rels', $mf) && array_key_exists('author', $mf['rels'])) {
+      $author['url'] = $mf['rels']['author'];
     }
 
     if(array_key_exists('published', $properties)) {
