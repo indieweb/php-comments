@@ -178,6 +178,13 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
         $type = 'like';
     }
 
+    // Check if this post is a "bookmark-of"
+    if($refURL && array_key_exists('bookmark-of', $properties)) {
+      collectURLs($properties['bookmark-of']);
+      if(in_array($refURL, $properties['bookmark-of']))
+        $type = 'bookmark';
+    }
+
     // From http://indiewebcamp.com/comments-presentation#How_to_display
 
     // If the entry has an e-content, and if the content is not too long, use that

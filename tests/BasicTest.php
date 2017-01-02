@@ -316,6 +316,16 @@ http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $
     $this->assertEquals('liked this post', $result['text']);
   }
 
+  public function testIsBookmarkOf() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => 'Bookmarked this',
+      'content' => 'bookmarked this post',
+      'bookmark-of' => $this->_refURL
+    )), $this->_refURL, 200);
+    $this->assertEquals('bookmark', $result['type']);
+    $this->assertEquals('bookmarked this post', $result['text']);
+  }
+
   public function testIsRepostOf() {
     $result = IndieWeb\comments\parse($this->buildHEntry(array(
       'name' => 'Reposted this',
