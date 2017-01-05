@@ -257,7 +257,9 @@ function parse($mf, $refURL=false, $maxTextLength=150, $maxLines=2) {
         if($nameSanitized != $contentSanitized and $nameSanitized !== '') {
           // If the name is the beginning of the content, we don't care
           // Same if the content is the beginning of the name (like with really long notes)
-          if(!(strpos($contentSanitized, $nameSanitized) === 0) && !(strpos($nameSanitized, $contentSanitized) === 0)) {
+          if($contentSanitized === '' 
+            || (!(strpos($contentSanitized, $nameSanitized) === 0) && !(strpos($nameSanitized, $contentSanitized) === 0))
+            ) {
             // The name was determined to be different from the content, so return it
             $name = $properties['name'][0]; //truncate($properties['name'][0], $maxTextLength, $maxLines);
           }

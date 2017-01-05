@@ -281,6 +281,32 @@ http://aaronparecki.com/articles/2013/10/13/1/realtime-indieweb-comments ...', $
 \t\tMar 30, 2014", $result['text']);
   }
 
+  public function testMentionNoNameWithContent() {
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => '',
+      'content' => 'post name'
+    )), false, 90);
+    $this->assertEquals('mention', $result['type']);
+    $this->assertEquals('', $result['name']);
+    $this->assertEquals('post name', $result['text']);
+  }
+
+  public function testMentionCommentedContentWithName() {
+    // It's possible for the plaintext to end up with an HTML comment for various reasons.
+    // Version 0.2.* of php-mf2 failed to remove the contents of <script> tags from plaintext,
+    // so you could end up with <script><!-- foo --></script> leading to an HTML comment in the text.
+    // Also <div class="e-content">&lt;!-- Hello World --></div> will result in what looks like HTML comment in the value.
+    $result = IndieWeb\comments\parse($this->buildHEntry(array(
+      'name' => "post name",
+      'content' => [
+        'html' => "<p><!-- comment --></p>",
+        'value' => "<!-- comment -->"
+      ]
+    )), false, 500);
+    $this->assertEquals('mention', $result['type']);
+    $this->assertEquals('post name', $result['name']);
+  }
+
   /***************************************************************************
    * Other post types
    */
